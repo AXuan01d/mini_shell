@@ -1,0 +1,4 @@
+./main aaaaaaaa   test.txt lock &
+./main abbbbbbccaaaa   test.txt lock &
+
+
