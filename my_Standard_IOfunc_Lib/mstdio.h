@@ -8,11 +8,11 @@ enum mode{READ, WRITE, APPEND};
 
 typedef struct
 {
-	int _fd;
-	char *_buff;
-	char *_nextc;
-	int _mode;
-	off_t _left;
+	int _fd;         
+	char *_buff;     //缓存区首地址
+	char *_nextc;    //下一个字符地址
+	int _mode;      //读写模式
+	off_t _left;    //缓存区剩余字符
 }MFILE;
 
 extern MFILE* mfopen(const char* const path, const char* const mode);
@@ -27,13 +27,10 @@ extern int mfputc(int character, MFILE *fp);
 extern int mungetc(int character, MFILE *fp);       //撤回一个字符
 
 extern char* mfgets(char *buff, int size, MFILE *fp); 
-extern int   mfputs(char *buff, MFile *fp);
+extern int   mfputs(char *buff, MFILE *fp);
 
 extern size_t mfread (void *buff, size_t size, size_t counter, MFILE *fp);
 extern size_t mfwirte(void *buff, size_t size, size_t counter, MFILE *fp);
-
-extern int M
-
 
 
 #endif
