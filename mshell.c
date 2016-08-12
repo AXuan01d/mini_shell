@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #define MAX_COMMAND_LEN 256
 const char* prompt = "mshell>";
@@ -26,6 +27,7 @@ void parse_cmd(Job *job, char* buffer){
 		strcpy(args[i], tmp);
 		++i;
 	}
+    args[i] = NULL;
 	job->progs_num = 0;
 	Program *prog = create_program(args);
 	add_program(job, prog);
@@ -36,21 +38,38 @@ void parse_cmd(Job *job, char* buffer){
 	return;
 }
 
-char *cmdName[] = {"cd", "pwd", "exit"};                    //命令名
-void (*func[])(Program* ) =  {func_cd, func_pwd, func_exit};    //命令函数数组
-const int MAX_NUM = 3;
+char *cmdName[] = {"cd", "pwd", "exit", "env", "export", "echo"};                    //命令名
+void (*func[])(Program* ) =  {func_cd, func_pwd, func_exit, func_env, func_export, func_echo};    //命令函数数组
+const int MAX_NUM = 6;
 
 void excute_cmd(Job *job){
-	int i, j;
+	int i, j, find;
 	for( i = 0; i < job->progs_num; ++i){        //该任务可能有多个参数
-		for( j = 0; j < MAX_NUM; ++j){
+		find = 0;
+		for( j = 0; j < MAX_NUM; ++j)
 			if( !strcmp(job->progs[i].args[0], cmdName[j]) ){
 				func[j]( &job->progs[i] );
+				find = 1;
 				break;       //匹配命令 退出该组参数
 			}
+		if(find)
+			continue;
+		pid_t pid = fork();
+		if(pid < 0)
+			perror("fork error");
+		else if(pid == 0){   //子进程
+			int k = 0;
+			while(job->progs[i].args[k]!= NULL)
+			printf("%s\n",job->progs[i].args[k++]);
+			if( execvp(job->progs[i].args[0], job->progs[i].args ) < 0){   //新进程切换到指定命令
+				perror("execvp error");
+				exit(0);
+			}
 		}
-		printf("input error\n");
-
+		else {    //父进程等待
+			waitpid(pid, NULL, WUNTRACED);
+		}
+		
 	}
 }
 
