@@ -68,7 +68,6 @@ void parse_cmd(Job *job, char* buffer, int* bg){
 	}
 	job->progs_num = 0;
 	Program *prog = create_program(args);
-
 	
 	for(i = 0; i< redirect_num;i++){
 		add_redirection(prog, rs[i]);
@@ -103,6 +102,7 @@ void excute_cmd(Job *job, int bg){
 		if(pid < 0)
 			perror("fork error");
 		else if(pid == 0){                  //子进程
+		
 			if(i == 0){                                //一号进程设为进程组
 				if(setpgid(getpid(), getpid())<0)
 					perror("setpgid error");
@@ -113,11 +113,9 @@ void excute_cmd(Job *job, int bg){
 					perror("setpgid error2");
 			}
 			if( bg == FOREGROUD)
-				tcsetpgrp(0, job->pgid);     // 前台进程组设为1号进程的进程组
+				tcsetpgrp(0, getpgid(getpid() ));     // 前台进程组设为1号进程的进程组
 	
-
 			job->progs[i].pid = getpid();      
-			
 			int k, len = job->progs[i].redirect_num;
 			for(k = 0; k < len; ++k){
 			    if(job->progs[i].redirects[k].redirect == RdRead){
@@ -125,25 +123,35 @@ void excute_cmd(Job *job, int bg){
 						perror("dup2 error");
 				}
 				else{                                   //输出重定向到文件
-					if(dup2(job->progs[i].redirects[k].fd, STDOUT_FILENO) != STDOUT_FILENO)          
+					if(dup2(job->progs[i].redirects[k].fd, STDOUT_FILENO) != STDOUT_FILENO)			
 						perror("dup2 error");
 				}
 			}	
-					
 			if( execvp(job->progs[i].args[0], job->progs[i].args ) < 0){   //新进程切换到指定命令
 				perror("execvp error");
 				exit(0);
 			}
 		}
 		else {    
-			/*
-			父进程再来进程组一次
-			 */
+			
+			//父进程再来进程组一次
+			if(i==0){
+				if(setpgid(pid, pid) < 0)
+					perror("setpgid error3");
+				job->pgid = pid;		
+			}
+			else
+				if(setpgid(pid, job->pgid) < 0)
+					perror("setpgid error4");
+			 
+			if(bg == FOREGROUD){
+				tcsetpgrp(0, job->pgid);
+			}
 			if(bg == FOREGROUD)
 				waitpid(-job->pgid, NULL, WUNTRACED);  //前台进程回收进程组所有子进程
 			else 
 				waitpid(-job->pgid, NULL, WNOHANG);  //后台运行
-
+			
 			//		waitpid(pid, NULL, WUNTRACED);
 		}
 		
@@ -151,6 +159,7 @@ void excute_cmd(Job *job, int bg){
 }
 
 int main(){
+	setpgid(getpid(), getpid());
 	char buffer[MAX_COMMAND_LEN];
 	ssize_t size = strlen(prompt);
 	int bg;       //前台后台进程组标志
