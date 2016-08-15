@@ -13,4 +13,4 @@ job.o: job.c job.h
 	gcc -c job.c
 
 clear:
-	rm -f *.o
+	rm -f *.o *.txt

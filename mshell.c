@@ -102,7 +102,13 @@ void excute_cmd(Job *job, int bg){
 		if(pid < 0)
 			perror("fork error");
 		else if(pid == 0){                  //子进程
-		
+			/*
+			//子进程会继承父进程的注册信号 不需要屏蔽
+			signal(SIGINT, SIG_DFL);
+			signal(SIGTTIN, SIG_DFL);
+			signal(SIGTTOU, SIG_DFL);
+			signal(SIGCHLD, SIG_DFL);
+			 */
 			if(i == 0){                                //一号进程设为进程组
 				if(setpgid(getpid(), getpid())<0)
 					perror("setpgid error");
@@ -134,7 +140,7 @@ void excute_cmd(Job *job, int bg){
 		}
 		else {    
 			
-			//父进程再来进程组一次
+			//父进程执行相同操作
 			if(i==0){
 				if(setpgid(pid, pid) < 0)
 					perror("setpgid error3");
@@ -151,15 +157,28 @@ void excute_cmd(Job *job, int bg){
 				waitpid(-job->pgid, NULL, WUNTRACED);  //前台进程回收进程组所有子进程
 			else 
 				waitpid(-job->pgid, NULL, WNOHANG);  //后台运行
-			
 			//		waitpid(pid, NULL, WUNTRACED);
 		}
 		
 	}
 }
 
+void sig_handler(int signo){
+	if(signo == SIGCHLD){
+		waitpid(-1, NULL, WNOHANG);   //等待任一子进程 非阻塞
+		tcsetpgrp(0, getpgid(getpid()));  //父进程（mini_shell）转为前台进程
+	}
+}
+
 int main(){
 	setpgid(getpid(), getpid());
+	
+	signal(SIGTTIN, SIG_IGN);   //后台进程读的时候发出的信号  会使进程屏蔽 所以忽略
+	signal(SIGTTOU, SIG_IGN);  //后台进程写的时候发出的信号
+	signal(SIGINT, SIG_IGN);  // ctrl+c
+
+	signal(SIGCHLD, sig_handler);  //子进程结束发给父进程的信号  注册一个处理函数
+
 	char buffer[MAX_COMMAND_LEN];
 	ssize_t size = strlen(prompt);
 	int bg;       //前台后台进程组标志
