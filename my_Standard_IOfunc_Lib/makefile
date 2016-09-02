@@ -1,7 +1,7 @@
 all: test_read test_write test_append
 
 test_write: test_write.o mstdio.o
-	gcc -o test_write test_write.o mstdio.o
+	gcc -g -o test_write test_write.o mstdio.o
 
 test_append: test_append.o mstdio.o
 	gcc -o test_append test_append.o mstdio.o
