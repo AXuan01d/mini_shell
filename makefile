@@ -1,16 +1,17 @@
-all: mshell
+.PHONY:clean
+all:minishell clean
+CC=gcc
+CFLAGS=-Wall -g
+BIN=minishell
+OBJS=main.o parse.o init.o
 
-mshell: mshell.o job.o func.o
-	gcc -o mshell mshell.o job.o func.o
+$(BIN):$(OBJS)
+	$(CC) $(CFLAGS) -o $@  $^ 
 
-mshell.o: mshell.c job.h func.h
-	gcc -c mshell.c
+%.o:%.c
+	$(CC) $(CFLAGS) -c $<
 
-func.o: func.h job.h
-	gcc -c func.c
-
-job.o: job.c job.h
-	gcc -c job.c
-
-clear:
-	rm -f *.o *.txt
+clean:
+	rm -f *.o
+	
+	
