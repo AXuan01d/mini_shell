@@ -12,6 +12,27 @@ char cmdLine[MAXLEN+1];
 char tempLine[MAXLEN+1];
 CMD cmd[PIPELINE];
 
+//cat < in.txt | wc -l | cat > out.txt                     ok
+//cat<in.txt|wc -l|cat>out.txt&                            ok
+void print_after_parse(int num){
+	printf("共%d条命令\n", num);
+	int i, cnt;
+	for(i = 0; i < num; ++i){
+		cnt = 0;
+		printf("第 %d 条命令 : ", i + 1);
+		char *t = cmd[i].args[cnt];
+		while(t != NULL	){
+			printf(" [%s] ", t);
+			t = cmd[i].args[++cnt];
+		}
+		printf("\n");
+	}
+	printf("infile : %s\n", infile);
+	printf("outfile : %s\n", outfile);
+	printf("后台运行   %s\n", backgnd?"是":"否");
+	printf("追加重定向  %s\n", append?"是":"否");
+	
+}
 
 void shell_loop(){
 	int num;
@@ -20,9 +41,9 @@ void shell_loop(){
 		init();                           //变量初始化
 		if(read_cmd() == -1)              //读命令
 			break;
-		if(parse() == -1)                 //解析命令
+		if((num = parse()) == -1)                 //解析命令
 			continue;
-		print_after_parse();
+	//	print_after_parse(num);
 	//	execute();		                  //执行命令
 	}
 	printf("\nminishell exited\n");

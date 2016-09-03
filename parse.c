@@ -21,16 +21,18 @@ int read_cmd(){
 }
 
 const char* parse_cmd(const char* t, int num){                //读取一条完整指令放在cmd[num]
-	//printf("该行的第%d条命令\n", num+1);
-
 	char *st;                   //一个字符串
 	int cnt = 0;
 	while(t != NULL){
 		st = temp;
+		while(*t == ' ' || *t == '\t')
+			++t;
 		while(*t != ' ' && *t != '\t' && *t != '\n' && *t != '\0' && *t != '>' && *t != '<' && *t != '|' && *t != '&')
 			*(temp++) = *(t++);
 		*(temp++) = '\0';
-		//printf(" %s \n",st);
+	
+		//	printf(" %s \n",st);
+
 		cmd[num].args[cnt++] = st;
 		while(*t == ' ' || *t == '\t')
 			++t;
@@ -46,7 +48,6 @@ const char* check_symbol(const char *p, const char ch){   // 检查是否有符�
 		++p;	
 	if(*p == ch){
 		Find = 1;	
-		//printf("ch = %c\n", ch);
 		return ++p;
 	}
 	return p;                                       
@@ -65,8 +66,6 @@ const char* getFileName(const char* s, char *t){                //保存文件�
 
 
 int parse(){                             //输入行 分词  存储在CMD的数组中  返回命令数量
-	//cat < in.txt | wc -l | cat > out.txt                     ok
-    //cat<in.txt|wc -l|cat>out.txt&                            ok
 	char *p = cmdLine;
 	const char *t;
 	int cmd_num = 0;
@@ -99,13 +98,12 @@ int parse(){                             //输入行 分词  存储在CMD的数�
 		if( (t = getFileName(t, outfile)) == NULL)	      // 7  输出重定向文件
 			perror("get out file error");
 	}
-	//printf("in file:%s\n outfile:%s\n",infile, outfile);
 
 	Find = 0;
 	t = check_symbol(t, '&');                                 // 8 最后检查后台运行符
 	if(Find)
 		backgnd = 1;
-
+	
 	Find = 0;
 	check_symbol(t, '\n');
 	if(Find)
