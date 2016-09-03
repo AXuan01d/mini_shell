@@ -38,13 +38,15 @@ void shell_loop(){
 	int num;
 	while(1){
 		printf("[minishell]$");
-		init();                           //变量初始化
-		if(read_cmd() == -1)              //读命令
+		init();                           //1变量初始化
+		if(read_cmd() == -1)              //2读取一行
 			break;
-		if((num = parse()) == -1)                 //解析命令
+		if((num = parse()) == -1){        //3解析命令
+			printf("输入有误 请重新输入\n");
 			continue;
-	//	print_after_parse(num);
-	//	execute();		                  //执行命令
+		}
+		print_after_parse(num);           //检查解析结果
+	//	execute();		                  //4执行命令
 	}
 	printf("\nminishell exited\n");
 }
