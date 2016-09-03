@@ -35,33 +35,35 @@ int read_cmd(){
 }
 
 const char* parse_cmd(const char* t, char* p, int num){                //读取一条完整指令放在cmd[num]
-	char *st; //一个字符串
+	char *st;                   //一个字符串
 	int cnt = 0;
 	while(t != NULL){
 		st = p;
-		while(*t != ' ' && *t != '\t' && *t != '\n' && *t != '\0')
+		while(*t != ' ' && *t != '\t' && *t != '\n' && *t != '\0' && *t != '>' && *t != '<' && *t != '|' && *t != '&')
 			*(p++) = *(t++);
 		*(p++) = '\0';
 		printf(" %s \n",st);
 		cmd[num].args[cnt++] = st;
 		while(*t == ' ' || *t == '\t')
 			++t;
-		if(*t =='\n' || *t == '\0' || *t == '|' || *t =='<' || *t == '>' || *t == '&')
+		if(*t =='\n' || *t == '\0' || *t == '|' || *t =='<' || *t == '>' || *t == '&')              //碰到各种符号跳出
 			break;
 	}
 	return t;
 }
 
-const char* check_symbol(const char *p, const char ch){
-	while(p != NULL && *p != '\0'){
-		if(*p == ch)
-			return ++p;
-		++p;
+int Find;
+const char* check_symbol(const char *p, const char ch){   // 检查是否有符号ch
+	while( *p == ' ' || *p == '\t')
+		++p;	
+	if(*p == ch){
+		Find = 1;	
+		return ++p;
 	}
-	return NULL;
+	return p;                                       
 }
 
-const char* getFileName(const char* s, char *t){
+const char* getFileName(const char* s, char *t){                //保存文件名字符串
 	while(*s == ' ' || *s == '\t')
 		++s;
 	if(*s == '|' || *s == '>' || *s == '&' || *s == '\0' || *s == '\n')
@@ -78,18 +80,19 @@ int parse(){                             //输入行 分词  存储在CMD的数�
 	const char *t;
 	char *s = tempLine;            //存储字符串常量  (args的指针没有分配内存 直接指向tempLine里的串)
 	t = parse_cmd(p, s, 0);        // 解析第一个命令到cmd[0]
+	Find = 0;
 	t = check_symbol(t, '<');      // 检查重定向符<  
-	if(t != NULL){
+	if(Find == 1){
 		if( (t = getFileName(t, infile)) == NULL)	      //重定向文件
-			perror("getFileName error");
+			perror("get in file error");
 	}
 	
 		
-
+	Find = 0;
 	t = check_symbol(t, '>');
-	if(t != NULL){
+	if(Find == 1){
 		if( (t = getFileName(t, outfile)) == NULL)	      //重定向文件
-			perror("getFileName error");
+			perror("get out file error");
 	}
 	printf("%s %s\n",infile, outfile);
 	return 0;
