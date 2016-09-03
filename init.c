@@ -17,8 +17,8 @@ void setup(){
 }
 
 void init(){
+	append = 0;
 	backgnd = 0;
-	cmd_num = 0;
 	memset(infile, 0, sizeof(infile));
 	memset(outfile, 0, sizeof(outfile));
 	memset(cmdLine, 0, sizeof(cmdLine));

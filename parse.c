@@ -2,30 +2,16 @@
 #include "def.h"
 #include "init.h"
 #include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 
+/*
 int backgnd;
-int cmd_num;
 char infile[MAXNAME+1];
 char outfile[MAXNAME+1];
 char cmdLine[MAXLEN+1];
 char tempLine[MAXLEN+1];
 CMD cmd[PIPELINE];
-
-void shell_loop(){
-	while(1){
-		printf("[minishell]$");
-		init();
-		if(read_cmd() == -1)
-			break;
-		parse();
-	//	execute();		
-	}
-	printf("\nminishell exited\n");
-}
+*/
+char *temp;
 
 int read_cmd(){
 	if(fgets(cmdLine, MAXLEN, stdin) == NULL){  //CTRL+D
@@ -34,15 +20,17 @@ int read_cmd(){
 	return 0;
 }
 
-const char* parse_cmd(const char* t, char* p, int num){                //读取一条完整指令放在cmd[num]
+const char* parse_cmd(const char* t, int num){                //读取一条完整指令放在cmd[num]
+	//printf("该行的第%d条命令\n", num+1);
+
 	char *st;                   //一个字符串
 	int cnt = 0;
 	while(t != NULL){
-		st = p;
+		st = temp;
 		while(*t != ' ' && *t != '\t' && *t != '\n' && *t != '\0' && *t != '>' && *t != '<' && *t != '|' && *t != '&')
-			*(p++) = *(t++);
-		*(p++) = '\0';
-		printf(" %s \n",st);
+			*(temp++) = *(t++);
+		*(temp++) = '\0';
+		//printf(" %s \n",st);
 		cmd[num].args[cnt++] = st;
 		while(*t == ' ' || *t == '\t')
 			++t;
@@ -58,6 +46,7 @@ const char* check_symbol(const char *p, const char ch){   // 检查是否有符�
 		++p;	
 	if(*p == ch){
 		Find = 1;	
+		//printf("ch = %c\n", ch);
 		return ++p;
 	}
 	return p;                                       
@@ -68,47 +57,58 @@ const char* getFileName(const char* s, char *t){                //保存文件�
 		++s;
 	if(*s == '|' || *s == '>' || *s == '&' || *s == '\0' || *s == '\n')
 		return NULL;
-	while(*s == '_' || (*s > 'a' && *s <'z') ||(*s > 'A' && *s <'Z') ||  (*s > '0' && *s <'9') )
+	while(*s == '_' || (*s > 'a' && *s <'z') ||(*s > 'A' && *s <'Z') ||  (*s > '0' && *s <'9') || *s == '.')
 		*t++ = *s++;
 	*t = '\0';
 	return s;
 }
 
 
-int parse(){                             //输入行 分词  存储在CMD的数组中 
+int parse(){                             //输入行 分词  存储在CMD的数组中  返回命令数量
+	//cat < in.txt | wc -l | cat > out.txt                     ok
+    //cat<in.txt|wc -l|cat>out.txt&                            ok
 	char *p = cmdLine;
 	const char *t;
-	char *s = tempLine;            //存储字符串常量  (args的指针没有分配内存 直接指向tempLine里的串)
-	t = parse_cmd(p, s, 0);        // 解析第一个命令到cmd[0]
+	int cmd_num = 0;
+	temp = tempLine;            //全局变量  templine存储分割后的字符串常量  (args的指针没有分配内存 直接指向tempLine里的串)
+	cmd_num = 0;
+
+	t = parse_cmd(p, cmd_num++);                          //1 解析第一个命令到cmd[0]
+
 	Find = 0;
-	t = check_symbol(t, '<');      // 检查重定向符<  
-	if(Find == 1){
-		if( (t = getFileName(t, infile)) == NULL)	      //重定向文件
+	t = check_symbol(t, '<');                             //2 第一个检查输入重定向符<  
+	if(Find){
+		if( (t = getFileName(t, infile)) == NULL)	      //3 重定向文件
 			perror("get in file error");
 	}
 	
-		
+	int i;
+	for(i = 1; i<PIPELINE; ++i){               //最多pipeline个命令
+		Find = 0;
+		t = check_symbol(t, '|');                         // 4 中间检查管道符
+		if(Find)
+			t = parse_cmd(t, cmd_num++);                  // 5 存储管道命令
+	}
+
 	Find = 0;
-	t = check_symbol(t, '>');
-	if(Find == 1){
-		if( (t = getFileName(t, outfile)) == NULL)	      //重定向文件
+	t = check_symbol(t, '>');                             // 6 再检查输出重定向符
+	if(Find){
+		Find = 0;
+		t = check_symbol(t, '>');
+		if(Find) append = 1;                              // 6.5 判断追加方式重定向
+		if( (t = getFileName(t, outfile)) == NULL)	      // 7  输出重定向文件
 			perror("get out file error");
 	}
-	printf("%s %s\n",infile, outfile);
-	return 0;
-}
+	//printf("in file:%s\n outfile:%s\n",infile, outfile);
 
-int execute(){
-	pid_t pid;
-	if((pid = fork()) < 0)
-		perror("fork error");
-	else if(pid == 0){                     //创建子进程去执行cmd命令
-	//	if(execvp(cmd[0].args[0], cmd.args) == -1)
-	//		perror("execvp error");
-	}
-	else {
-		wait(0);
-	}
-	
-	return 0;
+	Find = 0;
+	t = check_symbol(t, '&');                                 // 8 最后检查后台运行符
+	if(Find)
+		backgnd = 1;
+
+	Find = 0;
+	check_symbol(t, '\n');
+	if(Find)
+		return cmd_num;
+	return -1;
 }

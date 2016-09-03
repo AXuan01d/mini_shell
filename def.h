@@ -11,8 +11,8 @@ typedef struct command{
 	int fdin,fdout;
 }CMD;
 
+extern int append;      //是否追加重定向
 extern int backgnd;     //是否后台运行
-extern int cmd_num;     //一行指令个数
 extern char cmdLine[MAXLEN+1];       //读入的一行
 extern char tempLine[MAXLEN+1];      //将读入的一行中的空格 tab 化为‘\0’再存储在其中
 extern char infile[MAXNAME+1];       //输入重定向的文件
