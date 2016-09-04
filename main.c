@@ -4,6 +4,7 @@
 #include "def.h"
 #include <stdio.h>
 
+int cmd_num;
 int backgnd;
 int append;
 char infile[MAXNAME+1];
@@ -14,8 +15,10 @@ CMD cmd[PIPELINE];
 
 //cat < in.txt | wc -l | cat > out.txt                     ok
 //cat<in.txt|wc -l|cat>out.txt&                            ok
-void print_after_parse(int cmd_num){
+void print_after_parse(){
 	printf("共%d条命令\n", cmd_num);
+	if(!cmd_num)
+		return ;
 	int i, cnt;
 	for(i = 0; i < cmd_num; ++i){
 		cnt = 0;
@@ -35,18 +38,19 @@ void print_after_parse(int cmd_num){
 }
 
 void shell_loop(){
-	int cmd_num;
 	while(1){
 		printf("[minishell]$");
 		init();                           //1变量初始化
 		if(read_cmd() == -1)              //2读取一行
 			break;
-		if((cmd_num = parse()) == -1){        //3解析命令
+		if(parse() == -1){        //3解析命令
 			printf("输入有误 请重新输入\n");
 			continue;
 		}
-		print_after_parse(cmd_num);           //检查解析结果
-		execute(cmd_num);		                  //4执行命令
+		if(cmd_num == 0)
+			continue;
+	//	print_after_parse();           //检查解析结果
+		execute();		                  //4执行命令
 	}
 	printf("\nminishell exited\n");
 }

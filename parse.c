@@ -3,14 +3,6 @@
 #include "init.h"
 #include <stdio.h>
 
-/*
-int backgnd;
-char infile[MAXNAME+1];
-char outfile[MAXNAME+1];
-char cmdLine[MAXLEN+1];
-char tempLine[MAXLEN+1];
-CMD cmd[PIPELINE];
-*/
 char *temp;
 
 int read_cmd(){
@@ -48,6 +40,7 @@ const char* check_symbol(const char *p, const char ch){   // 检查是否有符�
 		++p;	
 	if(*p == ch){
 		Find = 1;	
+	//	printf("ch = %c \n",ch);
 		return ++p;
 	}
 	return p;                                       
@@ -68,10 +61,10 @@ const char* getFileName(const char* s, char *t){                //保存文件�
 int parse(){                             //输入行 分词  存储在CMD的数组中  返回命令数量
 	char *p = cmdLine;
 	const char *t;
-	int cmd_num = 0;
 	temp = tempLine;            //全局变量  templine存储分割后的字符串常量  (args的指针没有分配内存 直接指向tempLine里的串)
-	cmd_num = 0;
-
+	
+	if(*p == '\0' || *p == '\n')
+		return 0;
 	t = parse_cmd(p, cmd_num++);                          //1 解析第一个命令到cmd[0]
 
 	Find = 0;
@@ -103,10 +96,5 @@ int parse(){                             //输入行 分词  存储在CMD的数�
 	t = check_symbol(t, '&');                                 // 8 最后检查后台运行符
 	if(Find)
 		backgnd = 1;
-	
-	Find = 0;
-	check_symbol(t, '\n');
-	if(Find)
-		return cmd_num;
-	return -1;
+	return 0;
 }

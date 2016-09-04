@@ -17,10 +17,14 @@ void setup(){
 }
 
 void init(){
+	cmd_num = 0;
 	append = 0;
 	backgnd = 0;
 	memset(infile, 0, sizeof(infile));
 	memset(outfile, 0, sizeof(outfile));
 	memset(cmdLine, 0, sizeof(cmdLine));
 	memset(cmd, 0, sizeof(cmd));
+	int i;
+	for(i = 0 ;i < PIPELINE; ++i)
+		cmd[i].fdin = 0, cmd[i].fdout =1;
 }

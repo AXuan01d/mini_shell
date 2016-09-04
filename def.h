@@ -11,6 +11,7 @@ typedef struct command{
 	int fdin,fdout;
 }CMD;
 
+extern int cmd_num;
 extern int append;					//是否追加重定向
 extern int backgnd;					//是否后台运行
 extern char cmdLine[MAXLEN+1];       //读入的一行
