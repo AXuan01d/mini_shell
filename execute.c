@@ -5,8 +5,10 @@
 #include <sys/wait.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
 int lastpid;
 int open_max;
+ 
 
 void forkexec(CMD* tcmd){
 	pid_t pid;
@@ -35,17 +37,16 @@ int execute(){
 	lastpid = -1;
 	int i;
 	int  fds[2];
-/*	if(infile[0] != '\0'){                //有输入重定向的话打开输入文件
-		fd = open(infile, W_RDONLY);
-		dup2(fd, 0);
-	} 
+	if(infile[0] != '\0')               //有输入重定向的话打开输入文件
+		cmd[0].fdin = open(infile, O_RDONLY);
+	//printf("fdin = %d\n", cmd[0].fdin);
 	if(outfile[0] != '\0'){
 		if(append)
-			fd = open(outfile, W_WRONLY|W_APPEND|W_CREAT|0777);	
+			cmd[cmd_num-1].fdout = open(outfile, O_WRONLY|O_APPEND|O_CREAT);	
 		else 
-			fd = open(outfile, W_WRONLY|W_TRUNC|W_CREAT|0777);	
-		dup2(fd, 1);
-	}*/
+			cmd[cmd_num-1].fdout = open(outfile, O_WRONLY|O_TRUNC|O_CREAT);	
+	//	printf("out fd = %d\n", cmd[cmd_num-1].fdout);
+	}
 	for(i = 0; i < cmd_num; ++i){                  
 		if(i < cmd_num -1){
 			pipe(fds);                            // 创建管道让num个命令进行依次向后通信

@@ -27,4 +27,5 @@ void init(){
 	int i;
 	for(i = 0 ;i < PIPELINE; ++i)
 		cmd[i].fdin = 0, cmd[i].fdout =1;
+	printf("[minishell]$");
 }

@@ -39,7 +39,6 @@ void print_after_parse(){
 
 void shell_loop(){
 	while(1){
-		printf("[minishell]$");
 		init();                           //1变量初始化
 		if(read_cmd() == -1)              //2读取一行
 			break;
@@ -49,7 +48,7 @@ void shell_loop(){
 		}
 		if(cmd_num == 0)
 			continue;
-	//	print_after_parse();           //检查解析结果
+		print_after_parse();           //检查解析结果
 		execute();		                  //4执行命令
 	}
 	printf("\nminishell exited\n");

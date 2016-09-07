@@ -1,6 +1,7 @@
 #ifndef DEF_H
 #define DEF_H
 
+
 #define MAXLEN 1024  //输入行最大长度
 #define MAXARG 20    //每个命令参数的最大个数
 #define PIPELINE 5   //一行最多5个命令(管道)

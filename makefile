@@ -1,6 +1,6 @@
 .PHONY:clean
 all:minishell clean
-CC=gcc
+CC=gcc 
 CFLAGS=-Wall -g
 BIN=minishell
 OBJS=main.o parse.o execute.o init.o 
