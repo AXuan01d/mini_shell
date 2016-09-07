@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <signal.h>
 int lastpid;
 int open_max;
  
@@ -23,6 +24,10 @@ void forkexec(CMD* tcmd){
 		int i;
 		for(i = 3 ;i < open_max; ++i)     //关闭从父进程继承过来的多余文件描述符
 			close(i);
+		if(!backgnd){
+			signal(SIGINT, SIG_DFL);
+			signal(SIGQUIT, SIG_DFL);
+		}
 		execvp(tcmd->args[0], tcmd->args);
 		exit(EXIT_FAILURE);	            //execvp 正常执行不会返回
 	}
@@ -47,6 +52,12 @@ int execute(){
 			cmd[cmd_num-1].fdout = open(outfile, O_WRONLY|O_TRUNC|O_CREAT);	
 	//	printf("out fd = %d\n", cmd[cmd_num-1].fdout);
 	}
+
+	if(backgnd)
+		signal(SIGCHLD, SIG_IGN);            //如果是后台进程 忽略该信号 不传给父进程 子进程自动销毁 可以避免僵尸进程
+	else
+        signal(SIGCHLD, SIG_DFL);
+
 	for(i = 0; i < cmd_num; ++i){                  
 		if(i < cmd_num -1){
 			pipe(fds);                            // 创建管道让num个命令进行依次向后通信
@@ -60,7 +71,9 @@ int execute(){
 		if(cmd[i].fdout != 1)
 			close(cmd[i].fdout);
 	}
-	while(wait(NULL) != lastpid); //父进程等到最后一个子进程结束为止
+	if(!backgnd){
+		while(wait(NULL) != lastpid); //父进程等到最后一个子进程结束为止
+	}
 	return 0;
 }
 
